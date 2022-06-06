@@ -73,6 +73,10 @@ class Middleware
                     }
                 }
 
+	            if ( is_callable( $_middleware ) ) {
+		            $middleware = $_middleware;
+	            }
+
                 $middlewares[] = [ $middleware, $attributes ];
             }
 
