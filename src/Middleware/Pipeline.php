@@ -83,7 +83,8 @@ class Pipeline
                         $middleware = [ $middleware, $this->method ];
                     }
 
-                    return call_user_func($middleware, $payload, $attributes, $next);
+					// TODO: Add a reflection check if the handler needs `$attributes`
+                    return $middleware( $payload, $attributes, $next );
                 };
             },
             static fn($payload) => $payload,

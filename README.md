@@ -82,7 +82,7 @@ add_action('rest_api_init', function () {
             }
         ] )
         // And last but not least, Engage function needs to be called on `rest_api_init` action,
-        // otherwise it will tell ypu about that error. 
+        // otherwise it will tell you about that error. 
         ->engage( 'jwt/v1', 'auth' );
 }, 10 );
 ```
