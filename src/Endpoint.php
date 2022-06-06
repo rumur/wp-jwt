@@ -26,7 +26,7 @@ class Endpoint
             $parsed .= '?$';
         }
 
-        return "#${parsed}#";
+        return "#{$parsed}#";
     }
 
     /**
