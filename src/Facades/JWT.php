@@ -24,13 +24,13 @@ use Rumur\WordPress\JsonWebToken\Service;
  */
 class JWT extends Facade
 {
-	/**
-	 * Get the registered name of the component.
-	 *
-	 * @return string
-	 */
-	protected static function getFacadeAccessor(): string
-	{
-		return 'rumur_wp_jwt';
-	}
+    /**
+     * Get the registered name of the component.
+     *
+     * @return string
+     */
+    protected static function getFacadeAccessor(): string
+    {
+        return 'rumur_wp_jwt';
+    }
 }

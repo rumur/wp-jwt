@@ -12,27 +12,6 @@ class Service
     protected ?\WP_Error $user_resolver_error = null;
 
     /**
-     * Holds the list of endpoints that needs to be guarded by JWT.
-     *
-     * @var array<string,callable>
-     */
-    protected array $guards = [];
-
-    /**
-     * Holds the list of endpoints that needs to be ignored by JWT.
-     *
-     * @var array<string,callable>
-     */
-    protected array $ignore = [];
-
-    /**
-     * Holds the list of endpoint middlewares.
-     *
-     * @var array<string,callable>
-     */
-    protected array $middlewares = [];
-
-    /**
      * The Developers' own RestAPI routes register function.
      *
      * @var \Closure|null
@@ -47,6 +26,13 @@ class Service
     protected Issuer $issuer;
 
     /**
+     * Instance of a Middleware.
+     *
+     * @var Middleware
+     */
+    protected Middleware $middleware;
+
+    /**
      * Instantiate a Service.
      *
      * @param string|null $secret  Secret Key.
@@ -58,6 +44,8 @@ class Service
             $secret ?? ( defined('JWT_SECRET') ? JWT_SECRET : false ),
             $algo ?? ( defined('JWT_ALGO') ? JWT_ALGO : false )
         );
+
+        $this->middleware = new Middleware();
     }
 
     /**
@@ -69,11 +57,7 @@ class Service
      */
     public function guard($endpoints): self
     {
-        foreach ((array) $endpoints as $raw_endpoint) {
-            [ $endpoint, $resolver ] = Endpoint::prepare($raw_endpoint);
-
-            $this->guards[ $endpoint ] = $resolver;
-        }
+        $this->middleware->guard($endpoints);
 
         return $this;
     }
@@ -87,11 +71,7 @@ class Service
      */
     public function ignore($endpoints): self
     {
-        foreach ((array) $endpoints as $raw_endpoint) {
-            [ $endpoint, $resolver ] = Endpoint::prepare($raw_endpoint);
-
-            $this->ignore[ $endpoint ] = $resolver;
-        }
+        $this->middleware->ignore($endpoints);
 
         return $this;
     }
@@ -105,11 +85,7 @@ class Service
      */
     public function middleware($endpoints): self
     {
-        foreach ((array) $endpoints as $raw_endpoint) {
-            [ $endpoint, $resolver ] = Endpoint::prepare($raw_endpoint);
-
-            $this->middlewares[ $endpoint ] = $resolver;
-        }
+        $this->middleware->add($endpoints);
 
         return $this;
     }
@@ -122,7 +98,7 @@ class Service
      *
      * @return void
      */
-    public function engage(string $namespace = 'jwt/v1', string $rest_base = 'auth'): void
+    public function engage(string $namespace = 'jwt/v2', string $rest_base = 'auth'): void
     {
         if ('rest_api_init' !== current_action()) {
             $message = __('Service should be engaged on `rest_api_init` hook action.', 'rumur-jwt');
@@ -132,40 +108,9 @@ class Service
             throw new \RuntimeException($message);
         }
 
-        $this->routeResolver
-            ? call_user_func($this->routeResolver, $namespace, $rest_base, $this)
-            : ( new AuthController($namespace, $rest_base, $this) )->register_routes();
-
-        add_action('determine_current_user', function ($user_id) {
-            $uri = $_SERVER['REQUEST_URI'];
-
-            $should_skip  = Endpoint::match($uri, $this->ignore);
-            $should_guard = ! $should_skip && Endpoint::match($uri, $this->guards);
-
-            try {
-                if (! $user_id && $should_guard) {
-                    return $this->issuer->validate()->data->user->id;
-                }
-            } catch (Exceptions\TokenInvalid $e) {
-                $this->user_resolver_error = new \WP_Error('jwt_token_invalid', $e->getMessage(), [ 'status' => \WP_Http::FORBIDDEN ]);
-            } catch (Exceptions\Unauthorized $e) {
-                $this->user_resolver_error = new \WP_Error('jwt_user_not_authorised', $e->getMessage(), [ 'status' => \WP_Http::UNAUTHORIZED ]);
-            } catch (\Exception $e) {
-                $this->user_resolver_error = new \WP_Error('jwt_token_error', $e->getMessage(), [ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]);
-            }
-
-            return $user_id;
-        });
-
-        add_filter('rest_pre_dispatch', function ($request) {
-            if (is_wp_error($this->user_resolver_error)) {
-                return $this->user_resolver_error;
-            }
-
-            // TODO: Add Middleware Support here.
-
-            return $request;
-        }, 10);
+        $this->registerRoutes($namespace, $rest_base);
+        $this->registerUserResolver();
+        $this->registerMiddlewares();
     }
 
     /**
@@ -262,5 +207,80 @@ class Service
     public function issueFor($user): array
     {
         return $this->issuer->issueFor($user);
+    }
+
+    /**
+     * @param string $namespace
+     * @param string $rest_base
+     *
+     * @return void
+     */
+    protected function registerRoutes(string $namespace, string $rest_base): void
+    {
+        $this->routeResolver
+            ? call_user_func($this->routeResolver, $namespace, $rest_base, $this)
+            : ( new AuthController($namespace, $rest_base, $this) )->register_routes();
+    }
+
+    protected function registerUserResolver(): void
+    {
+        /**
+         * Filters the current user.
+         *
+         * The default filters use this to determine the current user from the
+         * request's cookies, if available.
+         *
+         * Returning a value of false will effectively short-circuit setting
+         * the current user.
+         *
+         * @param int|false $user_id User ID if one has been determined, false otherwise.
+         */
+        add_filter('determine_current_user', function ($user_id) {
+            if ($user_id) {
+                return $user_id;
+            }
+
+            $uri = $_SERVER['REQUEST_URI'];
+
+            $should_skip  = Endpoint::match($uri, $this->middleware->ignored());
+            $should_guard = ! $should_skip && Endpoint::match($uri, $this->middleware->guarded());
+
+            try {
+                if ($should_guard) {
+                    return $this->issuer->validate()->data->user->id;
+                }
+            } catch (Exceptions\TokenInvalid $e) {
+                $this->user_resolver_error = new \WP_Error('jwt_token_invalid', $e->getMessage(), [ 'status' => \WP_Http::FORBIDDEN ]);
+            } catch (Exceptions\Unauthorized $e) {
+                $this->user_resolver_error = new \WP_Error('jwt_user_not_authorized', $e->getMessage(), [ 'status' => \WP_Http::UNAUTHORIZED ]);
+            } catch (\Exception $e) {
+                $this->user_resolver_error = new \WP_Error('jwt_token_error', $e->getMessage(), [ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]);
+            }
+
+            // Return as it was before.
+            return $user_id;
+        });
+
+        /**
+         * Filters the pre-calculated result of a REST API dispatch request.
+         *
+         * Allow hijacking the request before dispatching by returning a non-empty. The returned value
+         * will be used to serve the request instead.
+         *
+         * @param mixed $result Response to replace the requested version with. Can be anything
+         *                                 a normal endpoint can return, or null to not hijack the request.
+         */
+        add_filter('rest_pre_dispatch', function ($result) {
+            if (is_wp_error($this->user_resolver_error)) {
+                return $this->user_resolver_error;
+            }
+
+            return $result;
+        }, 10);
+    }
+
+    protected function registerMiddlewares(): void
+    {
+        $this->middleware->engage();
     }
 }

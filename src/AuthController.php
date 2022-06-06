@@ -44,12 +44,12 @@ class AuthController extends \WP_REST_Controller
                     'callback'            => [ $this, 'get_item' ],
                     'permission_callback' => [ $this, 'get_item_permissions_check' ],
                     'args'                => [
-						'username'  => [
-							'type' => 'string',
-						],
-						'password'  => [
-							'type' => 'string',
-						],
+                        'username'  => [
+                            'type' => 'string',
+                        ],
+                        'password'  => [
+                            'type' => 'string',
+                        ],
                     ],
                 ]
             ]

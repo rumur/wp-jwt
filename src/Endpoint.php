@@ -15,7 +15,18 @@ class Endpoint
      */
     public static function endpointAsRegExp(string $endpoint): string
     {
-        return sprintf('#%s#', str_replace([ '*', '/' ], [ '(\w|\W)+', '\/' ], $endpoint));
+        $ends_with_wildcard = substr($endpoint, - strlen('/*')) === '/*';
+
+        $parsed = str_replace([ '*', '/' ], [ '(?:\w|\W)+', '\/' ], $endpoint);
+
+        // Make a strict match of the endpoint:
+        // - `wp/*/posts` NOT MATCH wp/v2/posts/12
+        // - `wp/*/posts/*` MATCH wp/v2/posts/12 AND wp/v2/posts/12/something-else-as-well
+        if (! $ends_with_wildcard) {
+            $parsed .= '?$';
+        }
+
+        return "#${parsed}#";
     }
 
     /**
