@@ -1,0 +1,53 @@
+{
+  "name": "rumur/wp-jwt",
+  "description": "WordPress JSON Web Token Authentication tool",
+  "keywords": ["wordpress", "jwt", "JSON Web Token", "Auth"],
+  "homepage": "https://github.com/rumur/wp-jwt",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "rumur",
+      "email": "rumur.dev@gmail.com"
+    }
+  ],
+  "autoload" : {
+    "psr-4" : {
+      "Rumur\\WordPress\\JsonWebToken\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "require": {
+    "php": ">=7.4.0|>=8.1.0",
+    "ext-json": "*",
+    "firebase/php-jwt": "^6.2"
+  },
+  "extra": {
+    "acorn": {
+      "aliases": {
+        "JWT": "Rumur\\WordPress\\JsonWebToken\\Facades\\JWT"
+      },
+      "providers": [
+        "Rumur\\WordPress\\JsonWebToken\\JWTServiceProvider"
+      ]
+    },
+    "laravel": {
+      "aliases": {
+        "JWT": "Rumur\\WordPress\\JsonWebToken\\Facades\\JWT"
+      },
+      "providers": [
+        "Rumur\\WordPress\\JsonWebToken\\JWTServiceProvider"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "./vendor/bin/phpunit -v",
+    "sniff": "./vendor/bin/phpcs -v",
+    "sniff-fix": "./vendor/bin/phpcbf -v"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.6",
+    "phpunit/phpunit": "^8.5"
+  }
+}
