@@ -19,9 +19,9 @@ class Endpoint
 
         $parsed = str_replace([ '*', '/' ], [ '(?:\w|\W)+', '\/' ], $endpoint);
 
-        // Make a strict match of the endpoint:
-        // - `wp/*/posts` NOT MATCH wp/v2/posts/12
-        // - `wp/*/posts/*` MATCH wp/v2/posts/12 AND wp/v2/posts/12/something-else-as-well
+        // Make an exact match of the endpoint:
+        // - `wp/*/posts` SHOULD NOT MATCH wp/v2/posts/12
+        // - `wp/*/posts/*` SHOULD MATCH wp/v2/posts/12 AND wp/v2/posts/12/something-else-as-well
         if (! $ends_with_wildcard) {
             $parsed .= '?$';
         }
@@ -36,7 +36,6 @@ class Endpoint
      *
      * @return array<string, callable>
      * @see Endpoint::match()
-     *
      */
     public static function prepare($endpoint): array
     {
@@ -48,7 +47,8 @@ class Endpoint
             $prepared = [ static::endpointAsRegExp('*'), $endpoint ];
         }
 
-        // An endpoint could be also an array where key as a string and value is a custom callable matcher.
+        // An endpoint could be also an array where key is an endpoint
+        // and value is a custom callable matcher.
         if (! $prepared && is_array($endpoint) && is_callable(current($endpoint))) {
             $prepared = [
                 static::endpointAsRegExp(key($endpoint)),
