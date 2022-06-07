@@ -45,10 +45,10 @@ add_action('rest_api_init', function () {
             ( new Api\AuthController($namespace, $rest_base, $jwt) )->register_routes();
         } )
         // List routes that need to be guarded by JWT, support wildcards.
-        ->guard([ 
+        ->guard( [ 
             'app/*',
             'wp/*/posts/*',
-        ]);
+        ] )
         // In case if you need to skip some routes, otherwise you might get errors,
         // because absence of a Bearer Token within headers triggers that errors. 
         ->ignore( [

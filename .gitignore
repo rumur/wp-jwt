@@ -1,5 +1,7 @@
 tools/*
 !tools/.gitkeep
+node_modules
 vendor
 composer.lock
+package-lock.json
 .phpunit.result.cache
