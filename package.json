@@ -19,11 +19,13 @@
 		"stop-all": "docker stop $(docker ps -a -q)",
 		"composer": "wp-env run composer",
 		"wp": "wp-env run cli",
-    "lint": "composer lint",
-		"test:php": "wp-env run phpunit 'composer test --working-dir=/var/www/html/wp-content/plugins/wp-jwt'"
-	},
+		"lint": "composer lint",
+		"test:php": "wp-env run phpunit 'composer test --working-dir=/var/www/html/wp-content/plugins/wp-jwt'",
+    "postinstall": "husky install && composer install"
+  },
 	"devDependencies": {
 		"@wordpress/env": "^4.7.0",
+		"husky": "^8.0.1",
 		"lint-staged": "^13.0.0"
 	},
 	"lint-staged": {

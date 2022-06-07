@@ -28,7 +28,8 @@ class Middleware
     /**
      * Sets middleware for endpoints.
      *
-     * @param array<string,string>|array<string,callable> $endpoints The list of endpoints that needs to be passed through middleware.
+     * @param array<string,string>|array<string,callable> $endpoints The list of endpoints that needs to be passed
+     *                                                               through middleware.
      *
      * @return $this for chaining purpose.
      */

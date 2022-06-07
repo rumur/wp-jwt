@@ -33,7 +33,7 @@ class AuthController extends \WP_REST_Controller
      *
      * @see register_rest_route()
      */
-    public function register_routes(): void
+    public function register_routes(): void // phpcs:ignore
     {
         register_rest_route(
             $this->namespace,

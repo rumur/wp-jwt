@@ -36,7 +36,8 @@ class Service
      * Instantiate a Service.
      *
      * @param string|null $secret  Secret Key.
-     * @param string|null $algo    Optional. Possible options `ES384`, `ES256`, `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.
+     * @param string|null $algo    Optional. Possible options `ES384`, `ES256`, `HS256`, `HS384`,
+     *                             `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.
      */
     public function __construct(?string $secret = null, ?string $algo = 'HS256')
     {
@@ -79,7 +80,8 @@ class Service
     /**
      * Sets middleware for endpoints.
      *
-     * @param string|string[]|array<string,callable> $endpoints The list of endpoints that needs to be passed through middleware.
+     * @param string|string[]|array<string,callable> $endpoints The list of endpoints that needs to be passed
+     *                                                          through middleware.
      *
      * @return $this for chaining purpose.
      */
@@ -245,11 +247,23 @@ class Service
                     return $this->issuer->validate()->data->user->id;
                 }
             } catch (Exceptions\TokenInvalid $e) {
-                $this->user_resolver_error = new \WP_Error('jwt_token_invalid', $e->getMessage(), [ 'status' => \WP_Http::FORBIDDEN ]);
+                $this->user_resolver_error = new \WP_Error(
+                    'jwt_token_invalid',
+                    $e->getMessage(),
+                    [ 'status' => \WP_Http::FORBIDDEN ]
+                );
             } catch (Exceptions\Unauthorized $e) {
-                $this->user_resolver_error = new \WP_Error('jwt_user_not_authorized', $e->getMessage(), [ 'status' => \WP_Http::UNAUTHORIZED ]);
+                $this->user_resolver_error = new \WP_Error(
+                    'jwt_user_not_authorized',
+                    $e->getMessage(),
+                    [ 'status' => \WP_Http::UNAUTHORIZED ]
+                );
             } catch (\Exception $e) {
-                $this->user_resolver_error = new \WP_Error('jwt_token_error', $e->getMessage(), [ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]);
+                $this->user_resolver_error = new \WP_Error(
+                    'jwt_token_error',
+                    $e->getMessage(),
+                    [ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]
+                );
             }
 
             // Return as it was before.

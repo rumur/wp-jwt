@@ -6,7 +6,8 @@ namespace Rumur\WordPress\JsonWebToken;
  * Helper factory function, to create JWT Service.
  *
  * @param string|null $secret Optional. Secret Key, default defined `JWT_SECRET` constant is used.
- * @param string|null $algo Optional. Default defined `JWT_ALGO` constant is used. Possible options `ES384`, `ES256`, `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.
+ * @param string|null $algo Optional. Default defined `JWT_ALGO` constant is used. Possible options `ES384`, `ES256`,
+ *                          `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.
  *
  * @return Service
  */

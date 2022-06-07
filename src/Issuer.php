@@ -29,7 +29,8 @@ class Issuer
      * Instantiate a Token Issuer.
      *
      * @param string|null $secret  Secret Key.
-     * @param string|null $algo    Optional. Possible options `ES384`, `ES256`, `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.
+     * @param string|null $algo    Optional. Possible options `ES384`, `ES256`, `HS256`, `HS384`,
+     *                             `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.
      */
     public function __construct(?string $secret = null, ?string $algo = 'HS256')
     {
@@ -57,7 +58,7 @@ class Issuer
         }
 
         if (! $this->algo) {
-            $message = __('Please define `JWT_ALGO` key before use, possible options: `ES384`, `ES256`, `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.', 'rumur-jwt');
+            $message = __('Please define `JWT_ALGO` key before use, possible options: `ES384`, `ES256`, `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.', 'rumur-jwt'); // phpcs:ignore
 
             _doing_it_wrong(__CLASS__, $message, '1.0.0');
 
