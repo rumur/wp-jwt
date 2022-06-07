@@ -51,14 +51,11 @@ class Middleware
                         ''
                     );
 
-                    $attributes = explode(',', $attributes);
+                    $attributes = array_filter(explode(',', $attributes));
 
                     switch ($name) {
                         case 'role':
                             $middleware = Middleware\RoleMiddleware::class;
-
-                            // Cleans up the empty string, if role list been forgotten.
-                            $attributes = array_filter($attributes);
                             break;
                         case 'can':
                             $middleware = Middleware\UserCanMiddleware::class;
@@ -68,14 +65,14 @@ class Middleware
                             $capability = $attributes[0];
                             unset($attributes[0]);
 
-                            $attributes = [ $capability, array_filter($attributes) ];
+                            $attributes = [ $capability, $attributes ];
                             break;
                     }
                 }
 
-	            if ( is_callable( $_middleware ) ) {
-		            $middleware = $_middleware;
-	            }
+                if (is_callable($_middleware)) {
+                    $middleware = $_middleware;
+                }
 
                 $middlewares[] = [ $middleware, $attributes ];
             }
@@ -140,6 +137,77 @@ class Middleware
         return $this->ignore;
     }
 
+    public function shouldBeIgnored(string $endpoint): bool
+    {
+        return Endpoint::match($endpoint, $this->ignored());
+    }
+
+    public function shouldBeGuarded(string $endpoint): bool
+    {
+        return ! $this->shouldBeIgnored($endpoint) && Endpoint::match($endpoint, $this->guarded());
+    }
+
+    public function middlewaresFor(string $endpoint): array
+    {
+        // Filter out all middlewares, so we get only ones for current endpoint.
+        $matched = array_filter(
+            $this->middlewares,
+            fn($middlewares, $regexp) => Endpoint::match(
+                $endpoint,
+                [ $regexp => $middlewares['matcher'] ]
+            ),
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        if (empty($matched)) {
+            return [];
+        }
+
+        /**
+         * Flatten all middlewares into one flat collection.
+         * Got: [
+         *      '#\/wp\/(?:\w|\W)+\/posts\/?$# => [
+         *          'matcher' => \Closure,
+         *          'middlewares' => [
+         *              [FirstMiddleware::class, 'handle'],
+         *              \Closure,
+         *              ...
+         *          ],
+         *          ...
+         *      ],
+         *      '#\/wp\/(?:\w|\W)+\/media\/?$# => [
+         *          'matcher' => \Closure,
+         *          'middlewares' => [
+         *              [SecondMiddleware::class, 'handle'],
+         *              \Closure,
+         *              ...
+         *          ],
+         *          ...
+         *      ],
+         *      ...
+         * ]
+         * Flattens into
+         * [
+         *      [FirstMiddleware::class, 'handle'],
+         *      \Closure,
+         *      // ...,
+         *      [SecondMiddleware::class, 'handle'],
+         *      \Closure,
+         *      // ...,
+         * ]
+         */
+        return array_reduce(
+            wp_list_pluck($matched, 'middlewares'),
+            static fn($collection, $middlewares) => array_merge($collection, (array) $middlewares),
+            []
+        );
+    }
+
+    public function applyFor($request, array $middlewares)
+    {
+        return ( new Pipeline() )->send($request)->through($middlewares);
+    }
+
     /**
      * Registers all necessary hooks and filters.
      *
@@ -165,61 +233,14 @@ class Middleware
             }
 
             // The endpoint should be ignored, bail out.
-            if (Endpoint::match($request->get_route(), $this->ignore)) {
+            if ($this->shouldBeIgnored($request->get_route())) {
                 return $result;
             }
 
-            // Filter out all middlewares, so we get only ones for current endpoint.
-            $route_middlewares = array_filter(
-                $this->middlewares,
-                fn($middlewares, $regexp) => Endpoint::match(
-                    $request->get_route(),
-                    [ $regexp => $middlewares['matcher'] ]
-                ),
-                ARRAY_FILTER_USE_BOTH
-            );
+            $middlewares = $this->middlewaresFor($request->get_route());
 
-            if (! empty($route_middlewares)) {
-                /**
-                 * Flatten all middlewares into one flat collection.
-                 * Got: [
-                 *      '#\/wp\/(?:\w|\W)+\/posts\/?$# => [
-                 *          'matcher' => \Closure,
-                 *          'middlewares' => [
-                 *              [FirstMiddleware::class, 'handle'],
-                 *              \Closure,
-                 *              ...
-                 *          ],
-                 *          ...
-                 *      ],
-                 *      '#\/wp\/(?:\w|\W)+\/media\/?$# => [
-                 *          'matcher' => \Closure,
-                 *          'middlewares' => [
-                 *              [SecondMiddleware::class, 'handle'],
-                 *              \Closure,
-                 *              ...
-                 *          ],
-                 *          ...
-                 *      ],
-                 *      ...
-                 * ]
-                 * Flattens into
-                 * [
-                 *      [FirstMiddleware::class, 'handle'],
-                 *      \Closure,
-                 *      // ...,
-                 *      [SecondMiddleware::class, 'handle'],
-                 *      \Closure,
-                 *      // ...,
-                 * ]
-                 */
-                $middlewares = array_reduce(
-                    wp_list_pluck($route_middlewares, 'middlewares'),
-                    static fn($collection, $pipes) => array_merge($collection, (array) $pipes),
-                    []
-                );
-
-                $outcome = ( new Pipeline() )->send($request)->through($middlewares);
+            if (! empty($middlewares)) {
+                $outcome = $this->applyFor($request, $middlewares);
 
                 if (is_wp_error($outcome)) {
                     return $outcome;

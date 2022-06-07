@@ -240,13 +240,8 @@ class Service
                 return $user_id;
             }
 
-            $uri = $_SERVER['REQUEST_URI'];
-
-            $should_skip  = Endpoint::match($uri, $this->middleware->ignored());
-            $should_guard = ! $should_skip && Endpoint::match($uri, $this->middleware->guarded());
-
             try {
-                if ($should_guard) {
+                if ($this->middleware->shouldBeGuarded($_SERVER['REQUEST_URI'])) {
                     return $this->issuer->validate()->data->user->id;
                 }
             } catch (Exceptions\TokenInvalid $e) {
