@@ -256,8 +256,8 @@ class Middleware
                     );
                 }
 
-                // We send a request, so we should get same request,
-                // if not sending back what we got.
+                // We applied for a request, so we should get same request back,
+                // if not sending back what we've got.
                 if ($outcome !== $request) {
                     return $outcome;
                 }
