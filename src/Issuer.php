@@ -250,12 +250,12 @@ class Issuer
          *
          * @param array  $claims Default JWT Claims.
          */
-        $token = apply_filters( 'rumur/jwt/token-claims', [
-            'iss' => get_bloginfo( 'url' ),
+        $token = apply_filters('rumur/jwt/token-claims', [
+            'iss' => get_bloginfo('url'),
             'iat' => $issuedAt,
             'nbf' => $notBefore,
             'exp' => $expire,
-        ] );
+        ]);
 
         $session_extender = fn(array $data) => array_merge([ 'jwt' => true ], $data);
 
@@ -275,11 +275,11 @@ class Issuer
          * @param array $data Default JWT User Token data.
          * @param \WP_User $user The User we're issuing token for.
          */
-        $token['data'] = apply_filters( 'rumur/jwt/token-data', [
+        $token['data'] = apply_filters('rumur/jwt/token-data', [
             'user' => [
                 'id' => $resolved->ID,
             ],
-        ], $user );
+        ], $user);
 
         $token = Provider::encode($token, $this->secret, $this->algo);
 
