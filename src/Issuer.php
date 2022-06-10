@@ -71,6 +71,18 @@ class Issuer
     }
 
     /**
+     * Provides Session Manager.
+     *
+     * @param int $user The User we need to provide a manager for.
+     *
+     * @return \WP_Session_Tokens
+     */
+    protected function sessionManagerFor(int $user): \WP_Session_Tokens
+    {
+        return \WP_Session_Tokens::get_instance($user);
+    }
+
+    /**
      * Checks whether the token decodes correctly and passes all checks.
      * In case if the Token was not provided it will try to retrieve the token from Authorization headers.
      *
@@ -108,7 +120,7 @@ class Issuer
 
             $validated = $this->validateToken($token);
 
-            \WP_Session_Tokens::get_instance($validated->data->user->id)->destroy($validated->jti);
+            $this->sessionManagerFor($validated->data->user->id)->destroy($validated->jti);
 
             return true;
         } catch (\Exception $e) {
@@ -168,7 +180,7 @@ class Issuer
              *
              * @link https://www.rfc-editor.org/rfc/rfc7519#section-4.1.1
              */
-            if ($decoded->iss !== get_bloginfo('url')) {
+            if ($decoded->iss !== $this->issuerInfo()) {
                 throw new Exceptions\TokenInvalid('The issuer does not match');
             }
 
@@ -186,7 +198,7 @@ class Issuer
                 throw new Exceptions\NotResolvableUser("User id: $decode_user_id no longer available");
             }
 
-            if (! \WP_Session_Tokens::get_instance($user->ID)->verify($decoded->jti)) {
+            if (! $this->sessionManagerFor($user->ID)->verify($decoded->jti)) {
                 throw new Exceptions\TokenStale('Token is no longer can be used');
             }
 
@@ -194,6 +206,44 @@ class Issuer
         } catch (ProviderBeforeValidException | ProviderExpiredException | ProviderSignatureInvalidException $e) {
             throw new Exceptions\TokenInvalid($e->getMessage());
         }
+    }
+
+    /**
+     * Provides the Issuer info claim.
+     *
+     * @link https://www.rfc-editor.org/rfc/rfc7519#section-4.1.1
+     *
+     * @return string
+     */
+    public function issuerInfo(): string
+    {
+        /**
+         * Filters the JWT Issuer Claim.
+         * Allows to extend the default JWT Issuer Claim.
+         *
+         * @param string $iss Default JWT Issuer Claim.
+         */
+        return apply_filters('rumur/jwt/token-issuer', get_bloginfo('url'));
+    }
+
+    /**
+     * Provides Time To Live for a token.
+     *
+     * @uses WEEK_IN_SECONDS
+     *
+     * @return int
+     */
+    public function tokenTTL(): int
+    {
+        /**
+         * Filters the default JWT time to live.
+         *
+         * Allows to extend the default JWT TTL.
+         *
+         * @param int $ttl Default JWT ttl.
+         * @return int
+         */
+        return apply_filters('rumur/jwt/token-ttl', WEEK_IN_SECONDS);
     }
 
     /**
@@ -240,7 +290,7 @@ class Issuer
 
         $issuedAt  = time();
         $notBefore = $issuedAt;
-        $expire    = $notBefore + ( DAY_IN_SECONDS * 7 );
+        $expire    = $notBefore + $this->tokenTTL();
 
         /**
          * Filters the JWT Claims.
@@ -252,7 +302,7 @@ class Issuer
          * @param array  $claims Default JWT Claims.
          */
         $token = apply_filters('rumur/jwt/token-claims', [
-            'iss' => get_bloginfo('url'),
+            'iss' => $this->issuerInfo(),
             'iat' => $issuedAt,
             'nbf' => $notBefore,
             'exp' => $expire,
@@ -263,10 +313,14 @@ class Issuer
         /** Extends the information attached to the newly created session. */
         add_filter('attach_session_information', $session_extender);
 
-        $token['jti'] = \WP_Session_Tokens::get_instance($resolved->ID)->create($expire);
+        $session = $this->sessionManagerFor($resolved->ID);
+
+        $token['jti'] = $session->create($expire);
 
         /** Removes the information extender. */
         remove_filter('attach_session_information', $session_extender);
+
+        $this->paranoidCheck($session, $token['jti']);
 
         /**
          * Filters the JWT Token Data.
@@ -290,5 +344,19 @@ class Issuer
             'user_nicename'     => $user->data->user_nicename,
             'user_display_name' => $user->data->display_name,
         ];
+    }
+
+    /**
+     * Checks if a new token got some changes in terms of either a User Agent or IP,
+     * if so triggers an action, that all developer can hook on and do what they need to do.
+     *
+     * @param \WP_Session_Tokens $session
+     * @param string $current_jti
+     *
+     * @return void
+     */
+    protected function paranoidCheck(\WP_Session_Tokens $session, string $current_jti): void
+    {
+        // TODO: Implement the logic.
     }
 }
