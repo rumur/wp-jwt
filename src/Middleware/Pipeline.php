@@ -69,7 +69,16 @@ class Pipeline
             array_reverse($middlewares),
             function ($next, $pipe) {
 
-                [ $middleware, $attributes ] = $pipe;
+                $middleware = $pipe;
+                $attributes = [];
+
+                /**
+                 * We also could get the pipe as an array,
+                 * where middleware is the first key and attributes are second.
+                 */
+                if (is_array($pipe)) {
+                    [ $middleware, $attributes ] = $pipe;
+                }
 
                 return function ($payload) use ($middleware, $attributes, $next) {
                     // Resolve if class wasn't instantiated.
@@ -84,7 +93,7 @@ class Pipeline
                     }
 
                     // TODO: Add a reflection check if the handler needs `$attributes`
-                    return $middleware($payload, $attributes, $next);
+                    return $middleware($payload, $next, $attributes);
                 };
             },
             static fn($payload) => $payload,

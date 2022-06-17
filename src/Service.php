@@ -33,6 +33,13 @@ class Service
     protected Middleware $middleware;
 
     /**
+     * Holds the list of endpoints that needs to be guarded by JWT.
+     *
+     * @var array<string,callable>
+     */
+    protected array $guards = [];
+
+    /**
      * Instantiate a Service.
      *
      * @param string|null $secret  Secret Key.
@@ -58,9 +65,25 @@ class Service
      */
     public function guard($endpoints): self
     {
-        $this->middleware->guard($endpoints);
+        foreach ((array) $endpoints as $raw_endpoint) {
+            [ $endpoint, $resolver ] = Endpoint::prepare($raw_endpoint);
+
+            $this->guards[ $endpoint ] = $resolver;
+        }
 
         return $this;
+    }
+
+    /**
+     * Checks whether an endpoint should be guarded and user should be resolved.
+     *
+     * @param string $endpoint
+     *
+     * @return bool
+     */
+    public function shouldBeGuarded(string $endpoint): bool
+    {
+        return ! $this->middleware->shouldBeIgnored($endpoint) && Endpoint::match($endpoint, $this->guards);
     }
 
     /**
@@ -243,7 +266,7 @@ class Service
             }
 
             try {
-                if ($this->middleware->shouldBeGuarded($_SERVER['REQUEST_URI'])) {
+                if ($this->shouldBeGuarded($_SERVER['REQUEST_URI'])) {
                     return $this->issuer->validate()->data->user->id;
                 }
             } catch (Exceptions\TokenInvalid $e) {

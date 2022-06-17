@@ -2,6 +2,9 @@
 
 namespace Rumur\WordPress\JsonWebToken\Middleware;
 
+use Closure;
+use WP_REST_Request;
+
 /**
  * RoleMiddleware Class
  *
@@ -9,7 +12,7 @@ namespace Rumur\WordPress\JsonWebToken\Middleware;
  */
 class RoleMiddleware
 {
-    public function handle($request, $roles, $next)
+    public function handle(WP_REST_Request $request, Closure $next, array $roles = [])
     {
         $user = wp_get_current_user();
 

@@ -40,10 +40,6 @@ use Rumur\WordPress\JsonWebToken\Service;
 add_action('rest_api_init', function () {
     // Creates a Service for you. 
     jwt()
-        // In case if you need to take over the control and register your own routes.
-        ->takeOver( function (string  $namespace, string $rest_base, Service $jwt ) {
-            ( new Api\AuthController($namespace, $rest_base, $jwt) )->register_routes();
-        } )
         // List routes that need to be guarded by JWT, support wildcards.
         ->guard( [ 
             'app/*',
@@ -58,12 +54,12 @@ add_action('rest_api_init', function () {
         ] )
         // There is also available some builtin middlewares
         // but also supports simple closures as well,
-        // ⚠️ NOTE: Middleware won't apply if that endpoint in within ignore list ⚠️ 
+        // ⚠️ NOTE: Middleware won't apply if that endpoint within ignore list ⚠️ 
         ->middleware( [
             'app/*/entity/*'  => [
                 'role:editor',
                 'can:edit_entity',
-                function(\WP_REST_Request $request, array $attributes, $next) {
+                function(\WP_REST_Request $request, Closure $next, array $attributes) {
                     // Do some logic.
                     // in case of success just pass the request to the next middleware
                     if (! current_user_can('edit_other_users')) {
@@ -73,7 +69,7 @@ add_action('rest_api_init', function () {
                     return $next($request);
                 }
             ],
-            'wp/*/media/*' => function(\WP_REST_Request $request, array $attributes, $next) {
+            'wp/*/media/*' => function(\WP_REST_Request $request, Closure $next, array $attributes) {
                 if (! current_user_can('edit_post', $request['id'])) {
                     return false;
                 }
@@ -81,9 +77,13 @@ add_action('rest_api_init', function () {
                 return $next($request);
             }
         ] )
+        // In case if you need to take over the control and register your own routes.
+        ->takeOver(function (string $namespace, string $rest_base, Service $jwt ) {
+            ( new Api\AuthController($namespace, $rest_base, $jwt) )->register_routes();
+        } )
         // And last but not least, Engage function needs to be called on `rest_api_init` action,
         // otherwise it will tell you about that error. 
-        ->engage( 'jwt/v1', 'auth' );
+        ->engage( $namespace = 'jwt/v1', $rest_base = 'auth' );
 }, 10 );
 ```
 

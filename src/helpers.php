@@ -21,3 +21,14 @@ function jwt(?string $secret = null, ?string $algo = 'HS256'): Service
 
     return $service;
 }
+
+/**
+ * Helper factory function, to create Middleware.
+ * @param array<string,string>|array<string,callable> $endpoints The list of endpoints that needs to be passed
+ *                                                               through middleware.
+ * @return Middleware
+ */
+function middleware(array $endpoints = []): Middleware
+{
+    return ( new Middleware() )->add($endpoints);
+}

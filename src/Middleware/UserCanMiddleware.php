@@ -2,6 +2,9 @@
 
 namespace Rumur\WordPress\JsonWebToken\Middleware;
 
+use Closure;
+use WP_REST_Request;
+
 /**
  * UserCanMiddleware Class
  *
@@ -9,7 +12,7 @@ namespace Rumur\WordPress\JsonWebToken\Middleware;
  */
 class UserCanMiddleware
 {
-    public function handle($request, $attributes, $next)
+    public function handle(WP_REST_Request $request, Closure $next, array $attributes)
     {
         [ $capability, $args ] = $attributes;
 

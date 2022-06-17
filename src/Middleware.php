@@ -12,13 +12,6 @@ class Middleware
     protected array $ignore = [];
 
     /**
-     * Holds the list of endpoints that needs to be guarded by JWT.
-     *
-     * @var array<string,callable>
-     */
-    protected array $guards = [];
-
-    /**
      * Holds the list of endpoint middlewares.
      *
      * @var array<string,callable>
@@ -88,29 +81,6 @@ class Middleware
     }
 
     /**
-     * Sets guarded endpoints.
-     *
-     * @param string|string[]|array<string,callable> $endpoints The list of endpoints that needs to be guarded by JWT.
-     *
-     * @return $this for chaining purpose.
-     */
-    public function guard($endpoints): self
-    {
-        foreach ((array) $endpoints as $raw_endpoint) {
-            [ $endpoint, $resolver ] = Endpoint::prepare($raw_endpoint);
-
-            $this->guards[ $endpoint ] = $resolver;
-        }
-
-        return $this;
-    }
-
-    public function guarded(): array
-    {
-        return $this->guards;
-    }
-
-    /**
      * Sets ignored endpoints.
      *
      * @param string|string[]|array<string,callable> $endpoints The list of endpoints that needs to be ignored by JWT.
@@ -141,11 +111,6 @@ class Middleware
     public function shouldBeIgnored(string $endpoint): bool
     {
         return Endpoint::match($endpoint, $this->ignored());
-    }
-
-    public function shouldBeGuarded(string $endpoint): bool
-    {
-        return ! $this->shouldBeIgnored($endpoint) && Endpoint::match($endpoint, $this->guarded());
     }
 
     public function middlewaresFor(string $endpoint): array
