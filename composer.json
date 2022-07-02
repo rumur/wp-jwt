@@ -12,7 +12,7 @@
   ],
   "autoload" : {
     "psr-4" : {
-      "Rumur\\WordPress\\JsonWebToken\\": "src/"
+      "Rumur\\WordPress\\JsonWebToken\\": "src"
     },
     "files": [
       "src/helpers.php"
