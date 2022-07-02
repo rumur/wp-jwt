@@ -3,4 +3,5 @@
 <ruleset>
     <rule ref="PSR12"/>
     <file>src</file>
+    <exclude-pattern>tools/*</exclude-pattern>
 </ruleset>
