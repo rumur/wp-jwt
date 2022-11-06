@@ -1,7 +1,7 @@
 {
 	"name": "wp-jwt",
 	"private": true,
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"description": "WordPress JSON Web Token Authentication tool.",
 	"author": "rumur",
 	"license": "MIT",
@@ -21,7 +21,7 @@
 		"wp": "wp-env run cli",
 		"lint": "composer lint",
 		"test:php": "wp-env run phpunit 'composer test --working-dir=/var/www/html/wp-content/plugins/wp-jwt'",
-    "postinstall": "husky install && composer install"
+		"postinstall": "husky install && composer install"
   },
 	"devDependencies": {
 		"@wordpress/env": "^4.7.0",

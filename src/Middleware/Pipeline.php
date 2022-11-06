@@ -1,6 +1,6 @@
 <?php
 
-namespace Rumur\WordPress\JsonWebToken;
+namespace Rumur\WordPress\JsonWebToken\Middleware;
 
 /**
  * Pipeline Class

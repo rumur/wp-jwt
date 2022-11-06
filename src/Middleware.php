@@ -171,7 +171,7 @@ class Middleware
 
     public function applyFor($request, array $middlewares)
     {
-        return ( new Pipeline() )->send($request)->through($middlewares);
+        return ( new Middleware\Pipeline() )->send($request)->through($middlewares);
     }
 
     /**
