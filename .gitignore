@@ -8,6 +8,8 @@ Thumbs.db
 
 .idea
 tools/*
+!tools/git-hooks
+!tools/full-to-relative-path.js
 !tools/.gitkeep
 node_modules
 vendor
