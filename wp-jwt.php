@@ -1,4 +1,5 @@
 <?php
+
 /*
 Plugin Name:  WordPress JSON Web Token
 Description:  WordPress JSON Web Token Authentication tool.

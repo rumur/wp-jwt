@@ -30,8 +30,5 @@
 	"devDependencies": {
 		"@wordpress/env": "^10.11.0",
 		"lint-staged": "^15.2.10"
-	},
-  "lint-staged": {
-    "*.php": "node tools/full-to-relative-path.js | xargs -I {} npm run lint {}"
-  }
+	}
 }

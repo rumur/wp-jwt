@@ -1,1 +1,1 @@
-npm exec lint-staged --concurrent
+npm exec lint-staged --concurrent --relative
