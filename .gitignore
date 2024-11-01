@@ -1,3 +1,4 @@
+.idea
 tools/*
 !tools/.gitkeep
 node_modules
