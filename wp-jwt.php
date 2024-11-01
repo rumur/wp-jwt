@@ -1,4 +1,5 @@
 <?php
+
 /*
 Plugin Name:  WordPress JSON Web Token
 Description:  WordPress JSON Web Token Authentication tool.
@@ -22,7 +23,12 @@ License:      MIT License
 */
 
 if (! file_exists($composer = __DIR__ . '/vendor/autoload.php')) {
-    wp_die(__('Error locating autoloader. Please run <code>composer install</code>.', 'rumur-jwt'));
+    wp_die(
+        wp_kses(
+            __('Error locating autoloader. Please run <code>composer install</code>.', 'rumur-jwt'),
+            ['code' => []]
+        )
+    );
 }
 
 require $composer;

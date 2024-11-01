@@ -125,11 +125,13 @@ class Service
      */
     public function engage(string $namespace = 'jwt/v2', string $rest_base = 'auth'): void
     {
-        if ('rest_api_init' !== current_action()) {
-            $message = __('Service should be engaged on `rest_api_init` hook action.', 'rumur-jwt');
+        if (! doing_action('rest_api_init')) {
+            $message = esc_html__('Service should be engaged on `rest_api_init` hook action.', 'rumur-jwt');
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- It's already escaped.
             _doing_it_wrong(__CLASS__, $message, '1.0.0');
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- It's already escaped.
             throw new \RuntimeException($message);
         }
 
@@ -266,7 +268,9 @@ class Service
             }
 
             try {
-                if ($this->shouldBeGuarded($_SERVER['REQUEST_URI'])) {
+                $sanitizedUri = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
+
+                if ($this->shouldBeGuarded($sanitizedUri)) {
                     return $this->issuer->validate()->data->user->id;
                 }
             } catch (Exceptions\TokenInvalid $e) {

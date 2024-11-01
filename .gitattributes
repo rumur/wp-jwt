@@ -1,0 +1,15 @@
+* text=auto
+
+/tools                   export-ignore
+/tests                   export-ignore
+/.github                 export-ignore
+/.php-cs-fixer.dist.php  export-ignore
+.travis.yml              export-ignore
+.editorconfig            export-ignore
+.wp-env.json             export-ignore
+.gitattributes           export-ignore
+.gitignore               export-ignore
+phpcs.xml.dist           export-ignore
+phpunit.xml.dist         export-ignore
+CHANGELOG.md             export-ignore
+README.md                export-ignore

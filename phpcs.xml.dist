@@ -1,7 +1,36 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
+<ruleset name="Package Rules">
+    <description>Combination of WordPress and PHP PSR Standards</description>
+    <arg name="extensions" value="php" />
+    <arg name="parallel" value="4" />
+    <arg name="colors" />
+    <arg value="p" /><!-- Show progress. -->
 
-<ruleset>
-    <rule ref="PSR12"/>
-    <file>src</file>
-    <exclude-pattern>tools/*</exclude-pattern>
+		<!-- Show sniff codes in all reports. -->
+		<!-- Example when ON: Missing @package tag in file comment (Squiz.Commenting.FileComment.MissingPackageTag) -->
+		<!-- Example when OFF: Missing @package tag in file comment -->
+		<arg value="s" />
+
+    <!-- Report warnings but don't make them fail the linter. -->
+	  <config name="ignore_warnings_on_exit" value="1" />
+
+    <!-- Include PSR12 Code Style Standards -->
+    <rule ref="PSR12" />
+
+    <!-- Include WordPress Security Rules Only -->
+    <rule ref="WordPress.Security" />
+
+    <!-- Include Package Files -->
+    <file>.</file>
+
+    <!-- Exclude developer helper directories -->
+    <exclude-pattern>**/node_modules/**</exclude-pattern>
+    <exclude-pattern>**/vendor/**</exclude-pattern>
+    <exclude-pattern>**/tests/**</exclude-pattern>
+    <exclude-pattern>**/tools/**</exclude-pattern>
+    <exclude-pattern>rector.php</exclude-pattern>
+    <exclude-pattern>lint-staged.config.js</exclude-pattern>
+
+		<!-- Add more exclusions as necessary -->
+		<!-- <exclude-pattern>**/path/to/exclude/**</exclude-pattern> -->
 </ruleset>
