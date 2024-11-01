@@ -2,9 +2,7 @@
 /**
  * Bootstrap the WP test environment.
  *
- * @package WP_Theme_Template
- *
- * phpcs:disable WPThemeReview.CoreFunctionality.FileInclude.FileIncludeFound
+ * @package Rumur\WordPress\JsonWebToken
  */
 
 // WP core test suite will make these the option values automatically.
@@ -21,6 +19,9 @@ tests_add_filter(
     'plugins_loaded',
     fn() => require dirname( __DIR__ ) . '/wp-jwt.php',
 );
+
+// Load the WP testing environment configuration.
+define( 'WP_TESTS_CONFIG_FILE_PATH',  getenv( 'WP_TESTS_DIR' ) . '/wp-tests-config.php' );
 
 // Start up the WP testing environment.
 require getenv( 'WP_PHPUNIT__DIR' ) . '/includes/bootstrap.php';
