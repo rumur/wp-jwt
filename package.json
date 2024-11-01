@@ -1,7 +1,7 @@
 {
 	"name": "wp-jwt",
 	"private": true,
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "WordPress JSON Web Token Authentication tool.",
 	"author": "rumur",
 	"license": "MIT",
@@ -9,7 +9,7 @@
 		"WordPress"
 	],
 	"engines": {
-		"node": ">=16.0.0"
+		"node": ">=20.0.0"
 	},
 	"homepage": "https://github.com/rumur/wp-jwt",
 	"scripts": {
@@ -17,18 +17,21 @@
 		"start": "wp-env start",
 		"stop": "wp-env stop",
 		"stop-all": "docker stop $(docker ps -a -q)",
-		"composer": "wp-env run composer",
+		"composer": "wp-env run wordpress --env-cwd=wp-content/plugins/wp-jwt -- composer",
 		"wp": "wp-env run cli",
-		"lint": "composer lint",
-		"test:php": "wp-env run phpunit 'composer test --working-dir=/var/www/html/wp-content/plugins/wp-jwt'",
-		"postinstall": "husky install && composer install"
-  },
-	"devDependencies": {
-		"@wordpress/env": "^4.7.0",
-		"husky": "^8.0.1",
-		"lint-staged": "^13.0.0"
+		"lint": "npm run composer -- lint",
+		"lint:fix": "npm run composer -- lint:fix",
+		"rector": "npm run composer -- rector",
+		"rector:fix": "npm run composer -- rector:fix",
+		"test": "wp-env run tests-wordpress --env-cwd=wp-content/plugins/wp-jwt -- composer test",
+		"prepare": "git config core.hooksPath ./tools/git-hooks",
+		"preinstall": "composer install"
 	},
-	"lint-staged": {
-		"*.php": "npm run lint"
-	}
+	"devDependencies": {
+		"@wordpress/env": "^10.11.0",
+		"lint-staged": "^15.2.10"
+	},
+  "lint-staged": {
+    "*.php": "node tools/full-to-relative-path.js | xargs -I {} npm run lint {}"
+  }
 }
