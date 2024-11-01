@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rumur\WordPress\JsonWebToken;
 
 use Firebase\JWT\JWT as Provider;
@@ -50,22 +52,25 @@ class Issuer
         $errors = [];
 
         if (! $this->secret) {
-            $message = __('Please define `JWT_SECRET` key before use.', 'rumur-jwt');
+            $message = esc_attr__('Please define `JWT_SECRET` key before use.', 'rumur-jwt');
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- It's already escaped.
             _doing_it_wrong(__CLASS__, $message, '1.0.0');
 
             $errors[] = $message;
         }
 
         if (! $this->algo) {
-            $message = __('Please define `JWT_ALGO` key before use, possible options: `ES384`, `ES256`, `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.', 'rumur-jwt'); // phpcs:ignore
+            $message = esc_attr__('Please define `JWT_ALGO` key before use, possible options: `ES384`, `ES256`, `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`, `EdDSA`.', 'rumur-jwt'); // phpcs:ignore
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- It's already escaped.
             _doing_it_wrong(__CLASS__, $message, '1.0.0');
 
             $errors[] = $message;
         }
 
         if (! empty($errors)) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- It's already escaped.
             throw new \InvalidArgumentException(implode('\n', $errors));
         }
     }
@@ -140,6 +145,7 @@ class Issuer
          * Looking for the HTTP_AUTHORIZATION header, if not present just return the user.
          * Double check for different auth header string (server dependent)
          */
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- we do it right where it's needed.
         $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? false;
 
         if (! $auth) {
@@ -147,7 +153,7 @@ class Issuer
         }
 
         /** The header is provided, lets retrieve the token. */
-        [ $token ] = sscanf($auth, 'Bearer %s');
+        [ $token ] = (array)(sscanf(wp_unslash($auth), 'Bearer %s') ?? []);
 
         if (! $token) {
             throw new Exceptions\MissingAuthorizationHeader('Authorization header is malformed.');
@@ -204,7 +210,7 @@ class Issuer
 
             return $decoded;
         } catch (ProviderBeforeValidException | ProviderExpiredException | ProviderSignatureInvalidException $e) {
-            throw new Exceptions\TokenInvalid($e->getMessage());
+            throw new Exceptions\TokenInvalid(esc_html($e->getMessage()));
         }
     }
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace Facades;
+namespace Rumur\WordPress\JsonWebToken\Facades;
 
 use Illuminate\Support\Facades\Facade;
 use Rumur\WordPress\JsonWebToken\Service;
 
 /**
- * Class Notice
+ * Class JWT
  *
  * @package Rumur\WordPress\JsonWebToken
  *
